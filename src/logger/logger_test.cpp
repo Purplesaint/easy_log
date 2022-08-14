@@ -1,4 +1,4 @@
-#include "logger.h"
+#include "../easy_log.h"
 int main () {
-    // easy_log::Logger logger;
+    LOG_INFO << "good";
 }

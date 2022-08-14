@@ -1,42 +1,46 @@
+#include <functional>
 #include "logger/logger.h"
 namespace easy_log {
-    enum class
+    enum class LogLevel
     {
         kNone,
-        kInfo,
         kDebug,
+        kInfo,
         kWarning,
         kError,
         kFatal
-    } LogLevel;
+    };
 
     class LogClient
     {
     public:
         LogClient()
-        : valid_logger_("log.txt") {}
+        : valid_logger_( new ValidLogger("log.txt") ) {}
         ~LogClient() = default;
         
-        LogClient & operator<<(const std::string & data) {
-            logger_.Log(data);
-            return (*this);
-        }
-        
-        Logger & LOG(LogLevel level) {
-            if (level >= current_level_) {
-                return valid_logger_ << data;
+        LineLogger LOG(LogLevel level,
+        const char * file_str ,const char * function_str,int line_n) {
+            if(level < current_level_) {
+                // 传入空的valid_logger让LineLogger什么也不做
+                return LineLogger(nullptr,file_str,function_str,line_n);
             }
-            return invalid_logger_ << data;
+            return LineLogger(valid_logger_.get(),file_str,function_str,line_n);
         }
-        
+
         static LogClient & getInstance() {
             return instance_;
         }
 
     private:
+        static std::string getUTC() {
+            return "";
+                }
+
+        static std::string getThreadId() {
+            return "";
+        }
 
         std::unique_ptr<ValidLogger> valid_logger_;
-        std::unique_ptr<InvalidLogger> invalid_logger_;
         static LogClient instance_;
         static LogLevel current_level_;
     };

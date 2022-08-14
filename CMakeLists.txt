@@ -12,8 +12,10 @@ target_include_directories(
 )
 
 target_sources(easy_log_test PRIVATE
-    src/logger/logger_test.cpp
+    src/log_client.h
+    src/log_client.cpp
     src/logger/logger.h
+    src/logger/logger_test.cpp
     )
 
 # include(CTest)
