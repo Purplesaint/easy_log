@@ -1,6 +1,7 @@
 #include <vector>
 #include <string_view>
 #include <string>
+#include <string.h>
 #include <stdio.h>
 #include <memory>
 
@@ -8,7 +9,7 @@ namespace easy_log {
     class Logger
     {
     public:
-        virtual bool Log(std::string_view str) = 0;
+        virtual bool Log(std::string_view str,bool log_sep = false) = 0;
         Logger &operator<<(const std::string &str)
         {
             Log(str);
@@ -93,13 +94,23 @@ namespace easy_log {
     public:
         explicit ValidLogger(std::string_view log_path)
             :
-            fp( fopen(log_path.data(),"a+"),&ValidLogger::closeFile )
-        {
-        }
+            fp( fopen(log_path.data(),"a+"),&ValidLogger::closeFile ) {}
 
-        virtual bool Log(std::string_view data) override {
-            printf("log data %s\n", data.data());
-            return (0 < fwrite(data.data(), data.size(), 1, fp.get()));
+        virtual bool Log(std::string_view data,bool log_sep = false) override {
+            if(data.empty()) {
+                return false;
+            }
+
+            static const char * seperator = " ";
+            if(log_sep) {
+                fwrite(seperator,strlen(seperator),1,fp.get());
+            }
+
+            if( 0 >= fwrite(data.data(), data.size(), 1, fp.get())) {
+                return false;
+            }
+            
+            return true;
         }
 
     private:
@@ -120,11 +131,12 @@ namespace easy_log {
             }
         }
 
-        virtual bool Log(std::string_view data) override {
+        virtual bool Log(std::string_view data,bool log_sep = false) override {
             if(logger_) {
-                return logger_->Log(data);
+                logger_->Log(data,log_before_);
+                log_before_ = true;
             }
-            return false;
+            return true;
         }
 
         ~LineLogger() {
@@ -135,6 +147,6 @@ namespace easy_log {
 
         private:
             ValidLogger* logger_;
+            bool log_before_ = false;
     };
-
 }
